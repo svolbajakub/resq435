@@ -8,9 +8,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Resq435">
-
-    <link rel="apple-touch-icon" href="icon.png">
     
+    <link rel="apple-touch-icon" href="icon.png">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
     <style>
@@ -77,7 +77,6 @@
         .b-1 { background: var(--warning); color: white; padding: 4px 8px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; }
         .b-2 { background: var(--danger); color: white; padding: 4px 8px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; }
 
-        /* PDF Styles */
         #pdf-template { display: none; padding: 20px; color: black; }
         #pdf-template table { width: 100%; border-collapse: collapse; }
         #pdf-template th, #pdf-template td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 10pt; }
@@ -105,7 +104,7 @@
     </div>
     <div class="dash">
         <div class="stat active" id="f-all" onclick="setFilter('all')"><b id="c-all">0</b><span>Vše</span></div>
-        <div class="stat" id="f-warn" onclick="setFilter('warn')"><b id="c-warn" style="color:var(--warning)">0</b><span>Příští m.</span></div>
+        <div class="stat" id="f-warn" onclick="setFilter('warn')"><b id="c-warn" style="color:var(--warning)">0</b><span>Příští měsíc</span></div>
         <div class="stat" id="f-crit" onclick="setFilter('crit')"><b id="c-crit" style="color:var(--danger)">0</b><span>Expiruje</span></div>
     </div>
 </header>
@@ -115,7 +114,12 @@
     <div class="form-grid">
         <input type="text" id="f-name" placeholder="Název">
         <select id="f-sec">
-            <option>Vozidlo</option><option>Batoh I/A</option><option>Batoh II/B</option><option>O2 brašna</option><option>Dětský batoh</option>
+            <option>Vozidlo</option>
+            <option>Batoh I/A</option>
+            <option>Batoh II/B</option>
+            <option>O2 brašna</option>
+            <option>Dětský batoh</option>
+            <option>Sklad</option>
         </select>
         <input type="number" id="f-count" placeholder="Ks" oninput="genExpInputs(this.value)">
     </div>
@@ -151,7 +155,6 @@
 </div>
 
 <script>
-    // --- KONFIGURACE ---
     const CLIENT_ID = '922975157088-8vq60bf9sks8kkaumno88ljp9ssr9qll.apps.googleusercontent.com';
     const API_KEY = 'AIzaSyDnk00pLlF_o4U-rtoDED-RYVVNPetVi28';
     const SCOPES = 'https://www.googleapis.com/auth/drive.file';
@@ -163,7 +166,6 @@
     let activeTab = 'Vše', activeFilter = 'all', editingIds = null;
     let expandedItems = new Set();
 
-    // --- DRIVE API ---
     function gapiLoaded() {
         gapi.load('client', async () => {
             await gapi.client.init({
@@ -178,7 +180,7 @@
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: CLIENT_ID,
             scope: SCOPES,
-            callback: '', // nadefinujeme při volání
+            callback: '',
         });
         gsiInited = true;
     }
@@ -226,7 +228,6 @@
         } catch (e) { alert("Chyba při načítání."); }
     }
 
-    // --- OSTATNÍ FUNKCE ---
     function exportJSON() {
         const blob = new Blob([JSON.stringify(inventory)], {type: 'application/json'});
         const a = document.createElement('a');
@@ -325,8 +326,13 @@
     function render() {
         const query = document.getElementById('search').value.toLowerCase();
         const list = document.getElementById('list');
-        const sections = ['Vše', 'Vozidlo', 'Batoh I/A', 'Batoh II/B', 'O2 brašna', 'Dětský batoh'];
-        document.getElementById('tabs').innerHTML = sections.map(s => `<div class="tab ${s===activeTab?'active':''}" onclick="activeTab='${s}';render()">${s}</div>`).join('');
+        
+        // Dynamické taby podle toho, co je v databázi
+        const defaultTabs = ['Vše', 'Vozidlo', 'Batoh I/A', 'Batoh II/B', 'O2 brašna', 'Dětský batoh', 'Sklad'];
+        const currentDataSecs = [...new Set(inventory.map(i => i.sec))];
+        const allUniqueTabs = ['Vše', ...new Set([...defaultTabs.slice(1), ...currentDataSecs])];
+        
+        document.getElementById('tabs').innerHTML = allUniqueTabs.map(s => `<div class="tab ${s===activeTab?'active':''}" onclick="activeTab='${s}';render()">${s}</div>`).join('');
 
         const grouped = {};
         let c = { all: 0, warn: 0, crit: 0 };

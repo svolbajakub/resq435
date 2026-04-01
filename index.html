@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Resq435®</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Resq435">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #007AFF; --bg: #f2f2f7; --card: #ffffff; --text: #1c1c1e;
+            --muted: #8e8e93; --danger: #FF3B30; --warning: #FF9500; --success: #34C759;
+            --border: #d1d1d6;
+        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, sans-serif; }
+        body { background: var(--bg); color: var(--text); margin: 0; padding-top: env(safe-area-inset-top); padding-bottom: 50px; }
+
+        header { padding: 20px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .app-bar { display: flex; justify-content: center; align-items: center; margin-bottom: 15px; position: relative; }
+        .app-title { font-weight: 900; font-size: 1.7rem; letter-spacing: -1px; color: #000; }
+        .app-title span { color: var(--primary); }
+        
+        .btn-add-circle { position: absolute; right: 0; background: var(--primary); color: white; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.8rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,122,255,0.3); }
+
+        .tools-area { background: #e5e5ea; border-radius: 12px; padding: 12px; margin-bottom: 12px; display: none; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .btn-tool { background: var(--card); border: 1px solid var(--border); padding: 10px; border-radius: 10px; font-size: 0.65rem; font-weight: 800; cursor: pointer; text-align: center; color: var(--text); }
+        .btn-drive { background: #34A853; color: white; border: none; }
+
+        .search-container { position: relative; width: 100%; margin-bottom: 12px; }
+        .search-input { width: 100%; padding: 12px 40px 12px 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 1rem; font-weight: 600; }
+        
+        .dash { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 5px; }
+        .stat { background: var(--bg); padding: 8px; border-radius: 12px; text-align: center; border: 1px solid var(--border); cursor: pointer; }
+        .stat.active { border: 2px solid var(--primary); background: var(--card); }
+        .stat b { display: block; font-size: 1.1rem; }
+        .stat span { font-size: 0.55rem; text-transform: uppercase; font-weight: 800; color: var(--muted); }
+
+        .form-card { background: var(--card); margin: 15px; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none; position: relative; z-index: 1000; }
+        .form-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; margin-bottom: 10px; }
+        input, select { padding: 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-weight: 600; font-size: 0.95rem; width: 100%; }
+        
+        .exp-row { display: flex; gap: 5px; margin-bottom: 8px; align-items: center; background: var(--bg); padding: 10px; border-radius: 12px; }
+        .btn-main { background: var(--primary); color: white; border: none; padding: 16px; border-radius: 14px; font-weight: 800; width: 100%; margin-top: 10px; font-size: 1rem; }
+        .btn-secondary { background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 8px; border-radius: 10px; font-weight: 700; font-size: 0.75rem; margin-bottom: 10px; width: 100%; }
+
+        .tabs { display: flex; overflow-x: auto; padding: 10px 15px; gap: 8px; scrollbar-width: none; }
+        .tab { padding: 8px 18px; border-radius: 20px; background: var(--card); border: 1px solid var(--border); font-size: 0.85rem; font-weight: 700; white-space: nowrap; }
+        .tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .content { padding: 10px 15px; }
+        .item-card { background: var(--card); border-radius: 20px; margin-bottom: 15px; overflow: hidden; border-left: 8px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .item-head { padding: 15px 18px; display: flex; justify-content: space-between; align-items: center; }
+        .item-name { font-weight: 800; font-size: 1.1rem; }
+        
+        .sub-container { display: none; background: #f9f9fb; border-top: 1px solid var(--bg); }
+        .expanded .sub-container { display: block; }
+        .sub-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; margin: 4px 8px; border-radius: 10px; }
+        .row-0 { background: rgba(52, 199, 89, 0.12); }
+        .row-1 { background: rgba(255, 149, 0, 0.12); }
+        .row-2 { background: rgba(255, 59, 48, 0.12); }
+        
+        .icon-btn { background: none; border: none; font-size: 1.1rem; cursor: pointer; }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; z-index: 2000; }
+        .modal { background: var(--card); padding: 25px; border-radius: 25px; width: 90%; max-width: 320px; text-align: center; }
+
+        .s-0 { border-left-color: var(--success); }
+        .s-1 { border-left-color: var(--warning); }
+        .s-2 { border-left-color: var(--danger); }
+        .b-0 { background: var(--success); color: white; padding: 4px 8px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; }
+        .b-1 { background: var(--warning); color: white; padding: 4px 8px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; }
+        .b-2 { background: var(--danger); color: white; padding: 4px 8px; border-radius: 6px; font-weight: 800; font-size: 0.8rem; }
+
+        /* PDF Styles */
+        #pdf-template { display: none; padding: 20px; color: black; }
+        #pdf-template table { width: 100%; border-collapse: collapse; }
+        #pdf-template th, #pdf-template td { border: 1px solid #ddd; padding: 8px; text-align: left; font-size: 10pt; }
+        #pdf-template th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="app-bar">
+        <div onclick="toggleTools()" style="position:absolute; left:0; font-size:1.2rem; cursor:pointer">⚙️</div>
+        <span class="app-title">Resq<span>435</span></span>
+        <button class="btn-add-circle" onclick="openAddForm()">+</button>
+    </div>
+
+    <div id="tools" class="tools-area">
+        <div class="btn-tool btn-drive" onclick="handleDrive('save')">☁️ ULOŽIT NA DISK</div>
+        <div class="btn-tool btn-drive" onclick="handleDrive('load')">📂 NAČÍST Z DISKU</div>
+        <div class="btn-tool" onclick="generatePDF()">📄 EXPORT PDF</div>
+        <div class="btn-tool" onclick="exportJSON()">💾 LOKÁLNÍ ZÁLOHA</div>
+    </div>
+
+    <div class="search-container">
+        <input type="text" id="search" class="search-input" placeholder="Hledat položku..." oninput="render()">
+    </div>
+    <div class="dash">
+        <div class="stat active" id="f-all" onclick="setFilter('all')"><b id="c-all">0</b><span>Vše</span></div>
+        <div class="stat" id="f-warn" onclick="setFilter('warn')"><b id="c-warn" style="color:var(--warning)">0</b><span>Příští m.</span></div>
+        <div class="stat" id="f-crit" onclick="setFilter('crit')"><b id="c-crit" style="color:var(--danger)">0</b><span>Expiruje</span></div>
+    </div>
+</header>
+
+<div id="form" class="form-card">
+    <h3 id="form-title" style="margin-top:0">Položka</h3>
+    <div class="form-grid">
+        <input type="text" id="f-name" placeholder="Název">
+        <select id="f-sec">
+            <option>Vozidlo</option><option>Batoh I/A</option><option>Batoh II/B</option><option>O2 brašna</option><option>Dětský batoh</option>
+        </select>
+        <input type="number" id="f-count" placeholder="Ks" oninput="genExpInputs(this.value)">
+    </div>
+    <button class="btn-secondary" onclick="applyFirstToAll()">⚡ NASTAVIT VŠEM STEJNĚ</button>
+    <div id="exp-inputs" style="max-height: 200px; overflow-y: auto; margin:10px 0;"></div>
+    <button class="btn-main" onclick="save()">ULOŽIT</button>
+    <button class="btn-main" onclick="closeForm()" style="background:var(--bg); color:var(--text); margin-top:5px">ZRUŠIT</button>
+</div>
+
+<div class="tabs" id="tabs"></div>
+<div class="content" id="list"></div>
+
+<div id="pdf-template">
+    <h1 style="text-align: center;">Resq435® - Kontrola materiálu</h1>
+    <p id="pdf-date" style="text-align: right;"></p>
+    <table id="pdf-table">
+        <thead>
+            <tr><th>Název položky</th><th>Sekce / Umístění</th><th>Expirace</th></tr>
+        </thead>
+        <tbody id="pdf-body"></tbody>
+    </table>
+</div>
+
+<div id="modal-overlay" class="modal-overlay">
+    <div class="modal">
+        <h3 id="modal-title">Smazat?</h3>
+        <p id="modal-text" style="display:none"></p>
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button class="btn-main" onclick="closeModal()" style="background:var(--bg); color:var(--text); flex:1">ZPĚT</button>
+            <button id="modal-confirm" class="btn-main" style="background:var(--danger); flex:1">SMAZAT</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- KONFIGURACE ---
+    const CLIENT_ID = '922975157088-8vq60bf9sks8kkaumno88ljp9ssr9qll.apps.googleusercontent.com';
+    const API_KEY = 'AIzaSyDnk00pLlF_o4U-rtoDED-RYVVNPetVi28';
+    const SCOPES = 'https://www.googleapis.com/auth/drive.file';
+    
+    let tokenClient;
+    let gapiInited = false;
+    let gsiInited = false;
+    let inventory = JSON.parse(localStorage.getItem('resq435_final_v2')) || [];
+    let activeTab = 'Vše', activeFilter = 'all', editingIds = null;
+    let expandedItems = new Set();
+
+    // --- DRIVE API ---
+    function gapiLoaded() {
+        gapi.load('client', async () => {
+            await gapi.client.init({
+                apiKey: API_KEY,
+                discoveryDocs: ["https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"],
+            });
+            gapiInited = true;
+        });
+    }
+
+    function gsiLoaded() {
+        tokenClient = google.accounts.oauth2.initTokenClient({
+            client_id: CLIENT_ID,
+            scope: SCOPES,
+            callback: '', // nadefinujeme při volání
+        });
+        gsiInited = true;
+    }
+
+    async function handleDrive(mode) {
+        tokenClient.callback = async (resp) => {
+            if (resp.error !== undefined) throw (resp);
+            if (mode === 'save') await saveToDrive();
+            if (mode === 'load') await loadFromDrive();
+        };
+        tokenClient.requestAccessToken({prompt: 'consent'});
+    }
+
+    async function saveToDrive() {
+        const fileContent = JSON.stringify(inventory);
+        const metadata = { 'name': 'resq435_backup.json', 'mimeType': 'application/json' };
+        const file = new Blob([fileContent], {type: 'application/json'});
+        const formData = new FormData();
+        formData.append('metadata', new Blob([JSON.stringify(metadata)], {type: 'application/json'}));
+        formData.append('file', file);
+
+        try {
+            await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + gapi.auth.getToken().access_token },
+                body: formData
+            });
+            alert("Zálohováno na Google Disk!");
+        } catch (e) { alert("Chyba při ukládání."); }
+    }
+
+    async function loadFromDrive() {
+        try {
+            const response = await gapi.client.drive.files.list({ q: "name = 'resq435_backup.json'", fields: 'files(id, name)' });
+            if (response.result.files.length > 0) {
+                const fileId = response.result.files[0].id;
+                const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+                    headers: { 'Authorization': 'Bearer ' + gapi.auth.getToken().access_token }
+                });
+                inventory = await res.json();
+                localStorage.setItem('resq435_final_v2', JSON.stringify(inventory));
+                render();
+                alert("Data načtena z Disku!");
+            } else { alert("Záloha na Disku nenalezena."); }
+        } catch (e) { alert("Chyba při načítání."); }
+    }
+
+    // --- OSTATNÍ FUNKCE ---
+    function exportJSON() {
+        const blob = new Blob([JSON.stringify(inventory)], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'resq_local_backup.json';
+        a.click();
+    }
+
+    function generatePDF() {
+        const body = document.getElementById('pdf-body');
+        document.getElementById('pdf-date').innerText = "Vytvořeno: " + new Date().toLocaleString('cs-CZ');
+        body.innerHTML = inventory.sort((a,b) => a.sec.localeCompare(b.sec)).map(i => 
+            `<tr><td>${i.name}</td><td>${i.sec}</td><td>${i.exp}</td></tr>`
+        ).join('');
+
+        const element = document.getElementById('pdf-template');
+        element.style.display = 'block';
+        const opt = { 
+            margin: 10, filename: 'resq_report.pdf', 
+            html2canvas: { scale: 2 }, 
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } 
+        };
+        html2pdf().set(opt).from(element).save().then(() => { element.style.display = 'none'; });
+    }
+
+    function toggleTools() { const t = document.getElementById('tools'); t.style.display = t.style.display === 'grid' ? 'none' : 'grid'; }
+    function setFilter(f) { activeFilter = f; document.querySelectorAll('.stat').forEach(s => s.classList.toggle('active', s.id === 'f-'+f)); render(); }
+    function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+    function closeForm() { document.getElementById('form').style.display = 'none'; }
+    
+    function openAddForm() {
+        editingIds = null; document.getElementById('form-title').innerText = "Nová položka";
+        document.getElementById('f-name').value = ""; document.getElementById('f-count').value = "";
+        document.getElementById('exp-inputs').innerHTML = ""; document.getElementById('form').style.display = 'block';
+    }
+
+    function genExpInputs(num, existing = []) {
+        const container = document.getElementById('exp-inputs');
+        container.innerHTML = '';
+        for(let i=0; i<(parseInt(num)||0); i++) {
+            const [exM, exY] = (existing[i] || "").split('/');
+            container.innerHTML += `<div class="exp-row"><span>#${i+1}</span>
+                <select class="f-m"><option value="">Měsíc</option>${Array.from({length:12},(_,m)=>(m+1).toString().padStart(2,'0')).map(m=>`<option ${m===exM?'selected':''}>${m}</option>`).join('')}</select>
+                <select class="f-y"><option value="">Rok</option>${Array.from({length:15},(_,y)=>(26+y).toString()).map(y=>`<option ${y===exY?'selected':''}>${y}</option>`).join('')}</select>
+            </div>`;
+        }
+    }
+
+    function applyFirstToAll() {
+        const rows = document.querySelectorAll('.exp-row');
+        if(rows.length < 2) return;
+        const m = rows[0].querySelector('.f-m').value, y = rows[0].querySelector('.f-y').value;
+        rows.forEach(r => { r.querySelector('.f-m').value = m; r.querySelector('.f-y').value = y; });
+    }
+
+    function save() {
+        const name = document.getElementById('f-name').value.trim(), sec = document.getElementById('f-sec').value, rows = document.querySelectorAll('.exp-row');
+        if(!name || rows.length === 0) return alert("Doplň název a počet!");
+        let allFilled = true;
+        rows.forEach(r => { if(!r.querySelector('.f-m').value || !r.querySelector('.f-y').value) allFilled = false; });
+        if(!allFilled) return alert("Vyplň expirace!");
+
+        if(editingIds) inventory = inventory.filter(i => !editingIds.includes(i.id));
+        rows.forEach(r => inventory.push({ id: Math.random().toString(36).substr(2,9), name, sec, exp: `${r.querySelector('.f-m').value}/${r.querySelector('.f-y').value}` }));
+        
+        localStorage.setItem('resq435_final_v2', JSON.stringify(inventory));
+        closeForm(); render();
+    }
+
+    function editGroup(name, sec, e) {
+        e.stopPropagation();
+        const items = inventory.filter(i => i.name === name && i.sec === sec);
+        editingIds = items.map(i => i.id);
+        document.getElementById('f-name').value = name; document.getElementById('f-sec').value = sec;
+        document.getElementById('f-count').value = items.length;
+        genExpInputs(items.length, items.map(i => i.exp));
+        document.getElementById('form').style.display = 'block';
+    }
+
+    function confirmDel(id, e) {
+        e.stopPropagation();
+        document.getElementById('modal-overlay').style.display = 'flex';
+        document.getElementById('modal-confirm').onclick = () => {
+            inventory = inventory.filter(i => i.id !== id);
+            localStorage.setItem('resq435_final_v2', JSON.stringify(inventory));
+            closeModal(); render();
+        };
+    }
+
+    function getStatus(exp) {
+        const [m, y] = exp.split('/').map(Number), d = new Date();
+        const cm = d.getMonth()+1, cy = parseInt(d.getFullYear().toString().slice(-2)), t = y * 12 + m, now = cy * 12 + cm;
+        return t <= now ? 2 : (t === now + 1 ? 1 : 0);
+    }
+
+    function render() {
+        const query = document.getElementById('search').value.toLowerCase();
+        const list = document.getElementById('list');
+        const sections = ['Vše', 'Vozidlo', 'Batoh I/A', 'Batoh II/B', 'O2 brašna', 'Dětský batoh'];
+        document.getElementById('tabs').innerHTML = sections.map(s => `<div class="tab ${s===activeTab?'active':''}" onclick="activeTab='${s}';render()">${s}</div>`).join('');
+
+        const grouped = {};
+        let c = { all: 0, warn: 0, crit: 0 };
+        inventory.forEach(i => {
+            const s = getStatus(i.exp);
+            c.all++; if(s===1) c.warn++; if(s===2) c.crit++;
+            if((activeTab==='Vše' || i.sec===activeTab) && i.name.toLowerCase().includes(query) && (activeFilter==='all' || (activeFilter==='warn'&&s===1) || (activeFilter==='crit'&&s===2))) {
+                const k = `${i.name}|${i.sec}`;
+                if(!grouped[k]) grouped[k] = []; grouped[k].push(i);
+            }
+        });
+
+        document.getElementById('c-all').innerText = c.all; document.getElementById('c-warn').innerText = c.warn; document.getElementById('c-crit').innerText = c.crit;
+        list.innerHTML = Object.keys(grouped).sort().map(k => {
+            const [n, s] = k.split('|'), subs = grouped[k], max = Math.max(...subs.map(si=>getStatus(si.exp))), exp = expandedItems.has(k);
+            return `<div class="item-card s-${max} ${exp?'expanded':''}">
+                <div class="item-head" onclick="expandedItems.has('${k}')?expandedItems.delete('${k}'):expandedItems.add('${k}');render()">
+                    <div><span style="font-size:0.6rem; color:var(--primary); font-weight:800;">${s}</span><br><span class="item-name">${n}</span></div>
+                    <div style="display:flex; align-items:center; gap:10px"><button class="icon-btn" onclick="editGroup('${n}','${s}',event)">📝</button><b>${subs.length} ks</b></div>
+                </div>
+                <div class="sub-container">${subs.map(si => `<div class="sub-row row-${getStatus(si.exp)}"><span class="badge b-${getStatus(si.exp)}">${si.exp}</span><button class="icon-btn" onclick="confirmDel('${si.id}',event)">🗑️</button></div>`).join('')}</div>
+            </div>`;
+        }).join('');
+    }
+
+    render();
+</script>
+<script async defer src="https://apis.google.com/js/api.js" onload="gapiLoaded()"></script>
+<script async defer src="https://accounts.google.com/gsi/client" onload="gsiLoaded()"></script>
+</body>
+</html>
